@@ -38,3 +38,5 @@
 
 `define IMMALU_OP  7'b0010011
 `define REGALU_OP  7'b0110011
+`define LOAD_OP    7'b0000011
+`define STORE_OP   7'b0100011

@@ -4,8 +4,8 @@ module rv32(input clk, reset,
             output writesmem, pause,
             output [31:0] aluout, writedata,
             input [31:0] readdata);
-    wire memtoreg, branch, alusrc, regdst, regwrite, jump;
-    wire [2:0] alucontrol;
+    wire memtoreg, branch, alusrc, regdst, regwrite, jump, splitimm;
+    wire [3:0] alucontrol;
     wire zero, brtaken;
     controller c(.op(instr[6:0]), 
                  .funct3(instr[14:12]),
@@ -19,9 +19,20 @@ module rv32(input clk, reset,
                  .writesreg(regwrite),
                  .jump(jump),
                  .pause(pause),
-                 .alucontrol(alucontrol));
-    datapath dp(clk, reset, memtoreg, brtaken,
-                alusrc, regwrite, jump,
-                zero, pc, instr,
-                aluout, writedata, readdata);
+                 .alucontrol(alucontrol),
+                 .splitimm(splitimm));
+    datapath dp(.clk(clk), .reset(reset), 
+                .memtoreg(memtoreg), 
+                .brtaken(brtaken),
+                .alusrcimm(alusrc), 
+                .writesreg(regwrite),
+                .jump(jump), 
+                .splitimm(splitimm), 
+                .alucontrol(alucontrol),
+                .zero(zero), 
+                .pc(pc), 
+                .instr(instr),
+                .aluout(aluout),
+                .writedata(writedata),
+                .readdata(readdata));
 endmodule

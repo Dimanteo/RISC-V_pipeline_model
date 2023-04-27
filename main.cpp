@@ -36,26 +36,34 @@ int main(int argc, char **argv) {
   for (size_t i = 0; i < 256; i++) {
     imem_stor[i] = 0;
   }
+  for (size_t i = 0; i < 256; i++) {
+    dmem_stor[i] = i + 1;
+  }
 
   constexpr uint32_t pause_instr = 0b00000001000000000000000000001111;
 
+  
   size_t imem_i = 0;
-  imem_stor[imem_i++] = 0x00500093; // li      ra,5
-  imem_stor[imem_i++] = 0x00200113; // li      sp,2
-  imem_stor[imem_i++] = 0x402081b3; // sub     gp,ra,sp
-  imem_stor[imem_i++] = 0x0020a1b3; // slt     gp,ra,sp
-  imem_stor[imem_i++] = 0x001121b3; // slt     gp,sp,ra
-  imem_stor[imem_i++] = 0x0020e1b3; // or      gp,ra,sp
-  imem_stor[imem_i++] = 0x0020c1b3; // xor     gp,ra,sp
-  imem_stor[imem_i++] = 0x0010c1b3; // xor     gp,ra,ra
-  imem_stor[imem_i++] = 0x002091b3; // sll     gp,ra,sp
-  imem_stor[imem_i++] = 0x4020d1b3; // sra     gp,ra,sp
-  imem_stor[imem_i++] = 0x0020d1b3; // srl     gp,ra,sp
+  /// Memory test bench
+  imem_stor[imem_i++] = 0x01400113; // li      sp,0
+  imem_stor[imem_i++] = 0x00012083; // lw      ra,0(sp)
+  imem_stor[imem_i++] = 0x00012023; // sw      zero,0(sp)
+  imem_stor[imem_i++] = 0x00012083; // lw      ra,0(sp)
   imem_stor[imem_i++] = pause_instr;
 
-  for (size_t i = 0; i < 256; i++) {
-    dmem_stor[i] = 0;
-  }
+  /// Arithmetics test bench
+  // imem_stor[imem_i++] = 0x00500093; // li      ra,5
+  // imem_stor[imem_i++] = 0x00200113; // li      sp,2
+  // imem_stor[imem_i++] = 0x402081b3; // sub     gp,ra,sp
+  // imem_stor[imem_i++] = 0x0020a1b3; // slt     gp,ra,sp
+  // imem_stor[imem_i++] = 0x001121b3; // slt     gp,sp,ra
+  // imem_stor[imem_i++] = 0x0020e1b3; // or      gp,ra,sp
+  // imem_stor[imem_i++] = 0x0020c1b3; // xor     gp,ra,sp
+  // imem_stor[imem_i++] = 0x0010c1b3; // xor     gp,ra,ra
+  // imem_stor[imem_i++] = 0x002091b3; // sll     gp,ra,sp
+  // imem_stor[imem_i++] = 0x4020d1b3; // sra     gp,ra,sp
+  // imem_stor[imem_i++] = 0x0020d1b3; // srl     gp,ra,sp
+  // imem_stor[imem_i++] = pause_instr;
 
   auto dump_state = [&]() {
     std::cout << "PC : " << std::hex << pc << "\n";
@@ -70,6 +78,7 @@ int main(int argc, char **argv) {
   };
 
   // Work
+  std::cout << "MEM: " << dmem_stor[5] << "\n";
   std::cout << "Evaluate model\n";
   model->top->rv32->c->md->pause = 0;
   while (!contextp->gotFinish() && !model->top->rv32->c->md->pause) {
@@ -84,6 +93,7 @@ int main(int argc, char **argv) {
   dump_state();
   std::cout << "\n";
   std::cout << "Finished\n";
+  std::cout << "MEM: " << dmem_stor[5] << "\n";
 
   model->final();
 }

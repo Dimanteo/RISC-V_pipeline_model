@@ -3,11 +3,11 @@
 #include "Vtop_datapath.h"
 #include "Vtop_maindec.h"
 #include "Vtop_memory.h"
-#include "Vtop_memory__S8.h"
 #include "Vtop_regfile.h"
 #include "Vtop_rv32.h"
 #include "Vtop_top.h"
 #include "verilated.h"
+#include <verilated_vcd_c.h>
 
 #include "memory"
 #include <iostream>
@@ -25,6 +25,11 @@ int main(int argc, char **argv) {
   auto &dmem_stor = model->top->dmem->storage;
   auto &pc = model->top->rv32->dp->pc;
 
+  Verilated::traceEverOn(true);
+  auto vcd = std::make_unique<VerilatedVcdC>();
+  model->trace(vcd.get(), 10);
+  vcd->open("out.vcd");
+
   // Init state
   model->clk = 0;
   model->reset = 0;
@@ -36,20 +41,29 @@ int main(int argc, char **argv) {
   for (size_t i = 0; i < 256; i++) {
     imem_stor[i] = 0;
   }
-  for (size_t i = 0; i < 256; i++) {
+  for (uint8_t i = 0; i < 255; i++) {
     dmem_stor[i] = i + 1;
   }
 
   constexpr uint32_t pause_instr = 0b00000001000000000000000000001111;
 
-  
+  auto put_insn = [&imem_stor](size_t idx, uint32_t inst) {
+    for (size_t byte = 0; byte < 4; byte++) {
+      imem_stor[idx * 4 + byte] =
+          static_cast<char>(inst >> ((3 - byte) * 8)) & 0xff;
+    }
+  };
+
   size_t imem_i = 0;
   /// Memory test bench
-  imem_stor[imem_i++] = 0x01400113; // li      sp,0
-  imem_stor[imem_i++] = 0x00012083; // lw      ra,0(sp)
-  imem_stor[imem_i++] = 0x00012023; // sw      zero,0(sp)
-  imem_stor[imem_i++] = 0x00012083; // lw      ra,0(sp)
-  imem_stor[imem_i++] = pause_instr;
+  put_insn(imem_i++, 0x00a02083); // lw x1, 10(x0)
+  put_insn(imem_i++, 0x00a01103); // lh x2, 10(x0)
+  put_insn(imem_i++, 0x00a00183); // lb x3, 10(x0)
+  put_insn(imem_i++, 0x00000213); // mov x4, 0
+  put_insn(imem_i++, 0x00400023); // sb x4, 0(x0)
+  put_insn(imem_i++, 0x00401023); // sh x4, 0(x0)
+  put_insn(imem_i++, 0x00402023); // sw x4, 0(x0)
+  put_insn(imem_i++, pause_instr);
 
   /// Arithmetics test bench
   // imem_stor[imem_i++] = 0x00500093; // li      ra,5
@@ -75,25 +89,31 @@ int main(int argc, char **argv) {
       }
       std::cout << "\n";
     }
+    std::cout << "memdump:\n";
+    for (unsigned i = 0; i < 4; i++) {
+      std::cout << "[" << i << "] : " <<  (int)dmem_stor[i] << " ";
+    }
+    std::cout << "\n";
   };
 
   // Work
-  std::cout << "MEM: " << dmem_stor[5] << "\n";
+  size_t vtime = 0;
   std::cout << "Evaluate model\n";
   model->top->rv32->c->md->pause = 0;
   while (!contextp->gotFinish() && !model->top->rv32->c->md->pause) {
-    model->clk = !model->clk;
     model->eval();
-    if (!model->clk) {
+    if (model->clk) {
       dump_state();
-      std::cout << "Controls: " << (int)model->top->rv32->c->md->controls << "\n";
     }
     std::cout << "\n";
+    model->clk = !model->clk;
+    vcd->dump(++vtime);
   }
+  vcd->dump(++vtime);
   dump_state();
   std::cout << "\n";
   std::cout << "Finished\n";
-  std::cout << "MEM: " << dmem_stor[5] << "\n";
 
   model->final();
+  vcd->close();
 }

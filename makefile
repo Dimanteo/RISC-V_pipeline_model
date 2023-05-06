@@ -1,7 +1,7 @@
 TOP_MODULE = top
 SRC = main.cpp
 VERILATOR = verilator
-VERILATOR_FLAGS = -cc --exe
+VERILATOR_FLAGS = -cc --exe --trace
 
 all: compile
 

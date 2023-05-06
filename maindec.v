@@ -2,7 +2,7 @@
 
 `include "inst.v"
 
-`define  ALU_ADD 4'b1000
+`define  ALU_ADD 4'b0000
 
 module maindec(input [6:0] op, input [2:0] funct3, input [6:0] funct7,
                output memtoreg,
@@ -13,7 +13,7 @@ module maindec(input [6:0] op, input [2:0] funct3, input [6:0] funct7,
                output pause /*verilator public*/,
                output [3:0] aluop,
                output splitimm);
-    reg [10:0] controls /*verilator public*/;
+    reg [10:0] controls;
     assign {memtoreg,
             memwrite,
             alusrcimm,
@@ -23,7 +23,7 @@ module maindec(input [6:0] op, input [2:0] funct3, input [6:0] funct7,
             splitimm,
             aluop
         } = controls;
-    always @ (*)
+    always @ (*) begin
         case(op)
             `PAUSE_OP  : controls = {7'b0000010, funct7[5], funct3};
             `IMMALU_OP : controls = {7'b0011000, 1'b0, funct3};
@@ -32,4 +32,5 @@ module maindec(input [6:0] op, input [2:0] funct3, input [6:0] funct7,
             `STORE_OP  : controls = {7'b0110001, `ALU_ADD};
             default: controls = {11'bxxxxxxxxxxx}; //???
         endcase
+    end
 endmodule

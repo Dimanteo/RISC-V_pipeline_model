@@ -4,7 +4,7 @@ module rv32(input clk, reset,
             output writesmem, pause,
             output [31:0] aluout, writedata,
             input [31:0] readdata);
-    wire memtoreg, branch, alusrc, regdst, regwrite, jump;
+    wire memtoreg, branch, alusrc, regdst, regwrite, readsreg, jump;
     wire [3:0] alucontrol;
     wire [2:0] itype;
     wire zero, brtaken;
@@ -16,6 +16,7 @@ module rv32(input clk, reset,
                 .memwrite(writesmem),
                 .alusrcimm(alusrc),
                 .writesreg(regwrite),
+                .readsreg(readsreg),
                 .jump(jump),
                 .pause(pause),
                 .aluop(alucontrol), 
@@ -27,6 +28,7 @@ module rv32(input clk, reset,
                 .brtaken(brtaken),
                 .alusrcimm(alusrc), 
                 .writesreg(regwrite),
+                .readsreg(readsreg),
                 .jump(jump), 
                 .simm(simm),
                 .uimm(uimm),

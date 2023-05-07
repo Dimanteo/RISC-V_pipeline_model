@@ -11,6 +11,7 @@ module maindec(input [6:0] op, input [2:0] funct3, input [6:0] funct7,
                output logic memwrite,
                output logic alusrcimm,
                output logic writesreg,
+               output logic readsreg,
                output logic jump,
                output logic pause /*verilator public*/,
                output logic [3:0] aluop,
@@ -23,6 +24,7 @@ module maindec(input [6:0] op, input [2:0] funct3, input [6:0] funct7,
                 memwrite = 0;
                 alusrcimm = 0;
                 writesreg = 0;
+                readsreg = 0;
                 jump = 0;
                 pause = 1;
                 itype = `RTYPE;
@@ -33,6 +35,7 @@ module maindec(input [6:0] op, input [2:0] funct3, input [6:0] funct7,
                 memwrite = 0;
                 alusrcimm = 1;
                 writesreg = 1;
+                readsreg = 1;
                 jump = 0;
                 pause = 0;
                 itype = `ITYPE;
@@ -43,6 +46,7 @@ module maindec(input [6:0] op, input [2:0] funct3, input [6:0] funct7,
                 memwrite = 0;
                 alusrcimm = 0;
                 writesreg = 1;
+                readsreg = 1;
                 jump = 0;
                 pause = 0;
                 itype = `RTYPE;
@@ -53,6 +57,7 @@ module maindec(input [6:0] op, input [2:0] funct3, input [6:0] funct7,
                 memwrite = 0;
                 alusrcimm = 1;
                 writesreg = 1;
+                readsreg = 1;
                 jump = 0;
                 pause = 0;
                 itype = `ITYPE;
@@ -63,6 +68,7 @@ module maindec(input [6:0] op, input [2:0] funct3, input [6:0] funct7,
                 memwrite = 1;
                 alusrcimm = 1;
                 writesreg = 0;
+                readsreg = 1;
                 jump = 0;
                 pause = 0;
                 itype = `STYPE;
@@ -73,10 +79,22 @@ module maindec(input [6:0] op, input [2:0] funct3, input [6:0] funct7,
                 memwrite = 0;
                 alusrcimm = 0;
                 writesreg = 1;
+                readsreg = 0;
                 jump = 1;
                 pause = 0;
                 itype = `JTYPE;
                 aluop = alu_nop;
+            end
+            `JALR_OP: begin
+                memtoreg = 0;
+                memwrite = 0;
+                alusrcimm = 1;
+                writesreg = 1;
+                readsreg = 1;
+                jump = 1;
+                pause = 0;
+                itype = `ITYPE;
+                aluop = `ALU_ADD;
             end
             default: $display("ERROR : unknown opcode");  //???
         endcase

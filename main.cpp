@@ -54,12 +54,19 @@ int main(int argc, char **argv) {
   };
 
   size_t imem_i = 0;
-  /// Branches testbench
-  put_insn(imem_i++, 0x00200093); // addi x1, x0, 2
-  put_insn(imem_i++, 0x00c0006f); // j Tgt
+  /// Indirect branches testbench
+  put_insn(imem_i++, 0x00c00093); // addi x1, x0, 2
+  put_insn(imem_i++, 0x00008067); // jr x1
   put_insn(imem_i++, 0x00200093); // addi x1, x0, 2
   put_insn(imem_i++, 0x00200093); // addi x1, x0, 2
   put_insn(imem_i++, pause_instr); // Tgt
+
+  /// Branches testbench
+  // put_insn(imem_i++, 0x00200093); // addi x1, x0, 2
+  // put_insn(imem_i++, 0x00c0006f); // j Tgt
+  // put_insn(imem_i++, 0x00200093); // addi x1, x0, 2
+  // put_insn(imem_i++, 0x00200093); // addi x1, x0, 2
+  // put_insn(imem_i++, pause_instr); // Tgt
 
   /// Memory test bench
   // put_insn(imem_i++, 0x00a02083); // lw x1, 10(x0)

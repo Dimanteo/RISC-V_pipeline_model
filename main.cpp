@@ -1,5 +1,4 @@
 #include "Vtop.h"
-#include "Vtop_controller.h"
 #include "Vtop_datapath.h"
 #include "Vtop_maindec.h"
 #include "Vtop_memory.h"
@@ -55,15 +54,22 @@ int main(int argc, char **argv) {
   };
 
   size_t imem_i = 0;
+  /// Branches testbench
+  put_insn(imem_i++, 0x00200093); // addi x1, x0, 2
+  put_insn(imem_i++, 0x00c0006f); // j Tgt
+  put_insn(imem_i++, 0x00200093); // addi x1, x0, 2
+  put_insn(imem_i++, 0x00200093); // addi x1, x0, 2
+  put_insn(imem_i++, pause_instr); // Tgt
+
   /// Memory test bench
-  put_insn(imem_i++, 0x00a02083); // lw x1, 10(x0)
-  put_insn(imem_i++, 0x00a01103); // lh x2, 10(x0)
-  put_insn(imem_i++, 0x00a00183); // lb x3, 10(x0)
-  put_insn(imem_i++, 0x00000213); // mov x4, 0
-  put_insn(imem_i++, 0x00400023); // sb x4, 0(x0)
-  put_insn(imem_i++, 0x00401023); // sh x4, 0(x0)
-  put_insn(imem_i++, 0x00402023); // sw x4, 0(x0)
-  put_insn(imem_i++, pause_instr);
+  // put_insn(imem_i++, 0x00a02083); // lw x1, 10(x0)
+  // put_insn(imem_i++, 0x00a01103); // lh x2, 10(x0)
+  // put_insn(imem_i++, 0x00a00183); // lb x3, 10(x0)
+  // put_insn(imem_i++, 0x00000213); // mov x4, 0
+  // put_insn(imem_i++, 0x00400023); // sb x4, 0(x0)
+  // put_insn(imem_i++, 0x00401023); // sh x4, 0(x0)
+  // put_insn(imem_i++, 0x00402023); // sw x4, 0(x0)
+  // put_insn(imem_i++, pause_instr);
 
   /// Arithmetics test bench
   // imem_stor[imem_i++] = 0x00500093; // li      ra,5
@@ -89,18 +95,18 @@ int main(int argc, char **argv) {
       }
       std::cout << "\n";
     }
-    std::cout << "memdump:\n";
-    for (unsigned i = 0; i < 4; i++) {
-      std::cout << "[" << i << "] : " <<  (int)dmem_stor[i] << " ";
-    }
+    // std::cout << "memdump:\n";
+    // for (unsigned i = 0; i < 4; i++) {
+    //   std::cout << "[" << i << "] : " <<  (int)dmem_stor[i] << " ";
+    // }
     std::cout << "\n";
   };
 
   // Work
   size_t vtime = 0;
   std::cout << "Evaluate model\n";
-  model->top->rv32->c->md->pause = 0;
-  while (!contextp->gotFinish() && !model->top->rv32->c->md->pause) {
+  model->top->rv32->md->pause = 0;
+  while (!contextp->gotFinish() && !model->top->rv32->md->pause) {
     model->eval();
     if (model->clk) {
       dump_state();
@@ -108,6 +114,7 @@ int main(int argc, char **argv) {
     std::cout << "\n";
     model->clk = !model->clk;
     vcd->dump(++vtime);
+    if (vtime == 20) break;
   }
   vcd->dump(++vtime);
   dump_state();

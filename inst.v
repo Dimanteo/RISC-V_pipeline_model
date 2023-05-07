@@ -40,3 +40,4 @@
 `define REGALU_OP  7'b0110011
 `define LOAD_OP    7'b0000011
 `define STORE_OP   7'b0100011
+`define JAL_OP     7'b1101111

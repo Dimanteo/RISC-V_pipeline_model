@@ -4,30 +4,32 @@ module rv32(input clk, reset,
             output writesmem, pause,
             output [31:0] aluout, writedata,
             input [31:0] readdata);
-    wire memtoreg, branch, alusrc, regdst, regwrite, jump, splitimm;
+    wire memtoreg, branch, alusrc, regdst, regwrite, jump;
     wire [3:0] alucontrol;
+    wire [2:0] itype;
     wire zero, brtaken;
-    controller c(.op(instr[6:0]), 
-                 .funct3(instr[14:12]),
-                 .funct7(instr[31:25]),
-                 .zero(zero),
-                 .memtoreg(memtoreg),
-                 .memwrite(writesmem),
-                 .brtaken(brtaken),
-                 .alusrc(alusrc), 
-                 .regdst(regdst),
-                 .writesreg(regwrite),
-                 .jump(jump),
-                 .pause(pause),
-                 .alucontrol(alucontrol),
-                 .splitimm(splitimm));
+    wire [31:0] simm, uimm;
+    maindec md (.op(instr[6:0]),
+                .funct3(instr[14:12]),
+                .funct7(instr[31:25]),
+                .memtoreg(memtoreg),
+                .memwrite(writesmem),
+                .alusrcimm(alusrc),
+                .writesreg(regwrite),
+                .jump(jump),
+                .pause(pause),
+                .aluop(alucontrol), 
+                .itype(itype));
+    assign brtaken = jump & zero;
+    immdec immd(.instr(instr), .itype(itype), .simm(simm), .uimm(uimm));
     datapath dp(.clk(clk), .reset(reset), 
                 .memtoreg(memtoreg), 
                 .brtaken(brtaken),
                 .alusrcimm(alusrc), 
                 .writesreg(regwrite),
                 .jump(jump), 
-                .splitimm(splitimm), 
+                .simm(simm),
+                .uimm(uimm),
                 .alucontrol(alucontrol),
                 .zero(zero), 
                 .pc(pc), 

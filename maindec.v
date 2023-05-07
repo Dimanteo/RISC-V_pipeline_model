@@ -2,35 +2,83 @@
 
 `include "inst.v"
 
+`include "formats.v"
+
 `define  ALU_ADD 4'b0000
 
 module maindec(input [6:0] op, input [2:0] funct3, input [6:0] funct7,
-               output memtoreg,
-               output memwrite,
-               output alusrcimm,
-               output writesreg,
-               output jump,
-               output pause /*verilator public*/,
-               output [3:0] aluop,
-               output splitimm);
-    reg [10:0] controls;
-    assign {memtoreg,
-            memwrite,
-            alusrcimm,
-            writesreg,
-            jump,
-            pause,
-            splitimm,
-            aluop
-        } = controls;
-    always @ (*) begin
+               output logic memtoreg,
+               output logic memwrite,
+               output logic alusrcimm,
+               output logic writesreg,
+               output logic jump,
+               output logic pause /*verilator public*/,
+               output logic [3:0] aluop,
+               output logic [2:0] itype);
+    wire [3:0] alu_nop = 4'bxxxx;
+    always_latch @ (*) begin
         case(op)
-            `PAUSE_OP  : controls = {7'b0000010, funct7[5], funct3};
-            `IMMALU_OP : controls = {7'b0011000, 1'b0, funct3};
-            `REGALU_OP : controls = {7'b0001000, funct7[5], funct3};
-            `LOAD_OP   : controls = {7'b1011000, `ALU_ADD};
-            `STORE_OP  : controls = {7'b0110001, `ALU_ADD};
-            default: controls = {11'bxxxxxxxxxxx}; //???
+            `PAUSE_OP: begin
+                memtoreg = 0;
+                memwrite = 0;
+                alusrcimm = 0;
+                writesreg = 0;
+                jump = 0;
+                pause = 1;
+                itype = `RTYPE;
+                aluop = alu_nop;
+            end
+            `IMMALU_OP: begin
+                memtoreg = 0;
+                memwrite = 0;
+                alusrcimm = 1;
+                writesreg = 1;
+                jump = 0;
+                pause = 0;
+                itype = `ITYPE;
+                aluop = {1'b0, funct3};
+            end
+            `REGALU_OP: begin
+                memtoreg = 0;
+                memwrite = 0;
+                alusrcimm = 0;
+                writesreg = 1;
+                jump = 0;
+                pause = 0;
+                itype = `RTYPE;
+                aluop = {funct7[5], funct3};
+            end
+            `LOAD_OP: begin 
+                memtoreg = 1;
+                memwrite = 0;
+                alusrcimm = 1;
+                writesreg = 1;
+                jump = 0;
+                pause = 0;
+                itype = `ITYPE;
+                aluop = `ALU_ADD;
+            end
+            `STORE_OP: begin
+                memtoreg = 0;
+                memwrite = 1;
+                alusrcimm = 1;
+                writesreg = 0;
+                jump = 0;
+                pause = 0;
+                itype = `STYPE;
+                aluop = `ALU_ADD;
+            end
+            `JAL_OP: begin
+                memtoreg = 0;
+                memwrite = 0;
+                alusrcimm = 0;
+                writesreg = 1;
+                jump = 1;
+                pause = 0;
+                itype = `JTYPE;
+                aluop = alu_nop;
+            end
+            default: $display("ERROR : unknown opcode");  //???
         endcase
     end
 endmodule

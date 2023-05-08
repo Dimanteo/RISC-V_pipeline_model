@@ -1,7 +1,7 @@
 module immdec(input [2:0] itype, input [31:0] instr, output [31:0] simm, uimm);
     wire [11:0] immItype = instr[31:20];
     wire [11:0] immStype = {instr[31:25], instr[11:7]};
-    wire [11:0] immBtype = {instr[31], instr[7], instr[30:25], instr[11:8]};
+    wire [12:0] immBtype = {instr[31], instr[7], instr[30:25], instr[11:8], 1'b0};
     wire [20:0] immJtype = {instr[31], instr[19:12], instr[20], instr[30:21], 1'b0};
     wire [31:0] immUtype = {instr[31:12], 12'd0};
 
@@ -17,7 +17,7 @@ module immdec(input [2:0] itype, input [31:0] instr, output [31:0] simm, uimm);
             itype[0] ? // STYPE
                 {{{20{immStype[11]}}, immStype}, {20'd0, immStype}}
             : // BTYPE
-                {{{20{immBtype[11]}}, immBtype}, {20'd0, immBtype}}
+                {{{19{immBtype[12]}}, immBtype}, {19'd0, immBtype}}
         : // RTYPE or ITYPE
             itype[0] ? // ITYPE
                 {{{20{immItype[11]}}, immItype}, {20'd0, immItype}}

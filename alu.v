@@ -1,5 +1,5 @@
 module alu(input [31:0] lhs, rhs, input [3:0] funct, 
-           output reg [31:0] y, output zero);
+           output reg [31:0] y);
     wire [31:0] sign_rhs = (funct[3] == 0) ? rhs : ~rhs + 1;
     always @(*) begin
         case(funct[2:0])
@@ -18,6 +18,5 @@ module alu(input [31:0] lhs, rhs, input [3:0] funct,
             3'b110: y = lhs | rhs; // OR
             3'b111: y = lhs & rhs; // AND
         endcase
-        assign zero = y == 0 ? 1 : 0;
     end
 endmodule

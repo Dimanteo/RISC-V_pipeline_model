@@ -54,12 +54,60 @@ int main(int argc, char **argv) {
   };
 
   size_t imem_i = 0;
+  #define PUTIN(inst) put_insn(imem_i++, inst)
+  /// Conditional branches testsbench
+  /// BGE
+  PUTIN(0x00000193);  // addi x3, x0, 0
+  PUTIN(0x00500093);  // addi x1, x0, 5
+  PUTIN(0x00600113);  // addi x2, x0, 6
+  PUTIN(0x0020da63);  // bge x1, x2, .Finish
+  PUTIN(0x00100193);  // addi x3, x0, 1
+  PUTIN(0x00500113);  // addi x2, x0, 5
+  PUTIN(0x0020d463);  // bge x1, x2, .Finish
+  PUTIN(0x00200193);  // addi x3, x0, 2
+  PUTIN(pause_instr); // .Finish
+
+  /// BLT
+  // PUTIN(0x00000193);  // addi x3, x0, 0
+  // PUTIN(0x00500093);  // addi x1, x0, 5
+  // PUTIN(0x00500113);  // addi x2, x0, 5
+  // PUTIN(0x0020ca63);  // blt x1, x2, .Finish
+  // PUTIN(0x00100193);  // addi x3, x0, 1
+  // PUTIN(0x00600113);  // addi x2, x0, 6
+  // PUTIN(0x0020c463);  // blt x1, x2, .Finish
+  // PUTIN(0x00200193);  // addi x3, x0, 2
+  // PUTIN(pause_instr); // .Finish
+
+  /// BNE
+  // put_insn(imem_i++, 0x00000193); // addi x3, x0, 0
+  // put_insn(imem_i++, 0x00c00093); // addi x1, x0, 12
+  // put_insn(imem_i++, 0x00c00113); // addi x2, x0, 12
+  // put_insn(imem_i++, 0x00209463); // bne x1, x2, .Tgt1
+  // put_insn(imem_i++, 0x00118193); // addi x3, x3, 1
+  // put_insn(imem_i++, 0x00a00093); // .Tgt1: addi x1, x0, 10
+  // put_insn(imem_i++, 0x00c00113); // addi x2, x0, 12
+  // put_insn(imem_i++, 0x00209463); // bne x1, x2, .Tgt2
+  // put_insn(imem_i++, 0x00218193); // addi x3, x3, 2
+  // put_insn(imem_i++, pause_instr); // Tgt2
+
+  /// BEQ
+  // put_insn(imem_i++, 0x00000193); // addi x3, x0, 0
+  // put_insn(imem_i++, 0x00c00093); // addi x1, x0, 12
+  // put_insn(imem_i++, 0x00c00113); // addi x2, x0, 12
+  // put_insn(imem_i++, 0x00208463); // beq x1, x2, .Tgt1
+  // put_insn(imem_i++, 0x00118193); // addi x3, x3, 1
+  // put_insn(imem_i++, 0x00a00093); // .Tgt1: addi x1, x0, 10
+  // put_insn(imem_i++, 0x00c00113); // addi x2, x0, 12
+  // put_insn(imem_i++, 0x00208463); // beq x1, x2, .Tgt2
+  // put_insn(imem_i++, 0x00218193); // addi x3, x3, 2
+  // put_insn(imem_i++, pause_instr); // Tgt2
+
   /// Indirect branches testbench
-  put_insn(imem_i++, 0x00c00093); // addi x1, x0, 2
-  put_insn(imem_i++, 0x00008067); // jr x1
-  put_insn(imem_i++, 0x00200093); // addi x1, x0, 2
-  put_insn(imem_i++, 0x00200093); // addi x1, x0, 2
-  put_insn(imem_i++, pause_instr); // Tgt
+  // put_insn(imem_i++, 0x00c00093); // addi x1, x0, c
+  // put_insn(imem_i++, 0x00008067); // jr x1
+  // put_insn(imem_i++, 0x00200093); // addi x1, x0, 2
+  // put_insn(imem_i++, 0x00200093); // addi x1, x0, 2
+  // put_insn(imem_i++, pause_instr); // Tgt
 
   /// Branches testbench
   // put_insn(imem_i++, 0x00200093); // addi x1, x0, 2
@@ -91,6 +139,8 @@ int main(int argc, char **argv) {
   // imem_stor[imem_i++] = 0x4020d1b3; // sra     gp,ra,sp
   // imem_stor[imem_i++] = 0x0020d1b3; // srl     gp,ra,sp
   // imem_stor[imem_i++] = pause_instr;
+
+  #undef PUTIN
 
   auto dump_state = [&]() {
     std::cout << "PC : " << std::hex << pc << "\n";

@@ -19,11 +19,14 @@ module maindec(input [6:0] op, input [2:0] funct3, input [6:0] funct7,
                output logic pause /*verilator public*/,
                output logic [3:0] aluop,
                output logic [2:0] itype,
-               output logic invcond, uncond);
+               output logic invcond, uncond,
+               output logic genupimm, pcrel);
     wire [3:0] alu_nop = 4'bxxxx;
     always_latch @ (*) begin
         invcond = 1'bx;
         uncond = 1'bx;
+        genupimm = 1'b0;
+        pcrel = 0;
         case(op)
             `ECALL_OP: begin // EBREAK
                 memtoreg = 0;
@@ -102,6 +105,7 @@ module maindec(input [6:0] op, input [2:0] funct3, input [6:0] funct7,
                 itype = `JTYPE;
                 aluop = alu_nop;
                 uncond = 1;
+                pcrel = 1;
             end
             `JALR_OP: begin
                 memtoreg = 0;
@@ -128,6 +132,32 @@ module maindec(input [6:0] op, input [2:0] funct3, input [6:0] funct7,
                 : funct3[2:1] == 2'b10 ? {`ALU_SLT, !funct3[0]}
                 : funct3[2:1] == 2'b11 ? {`ALU_SLTU, !funct3[0]} : {alu_nop, funct3[0]};
                 uncond = 0;
+                pcrel = 1;
+            end
+            `LUI_OP: begin
+                memtoreg = 0;
+                memwrite = 0;
+                alusrcimm = 0;
+                writesreg = 1;
+                indirectbr = 0;
+                jump = 0;
+                pause = 0;
+                itype = `UTYPE;
+                aluop = alu_nop;
+                genupimm = 1;
+            end
+            `AUIPC_OP: begin
+                memtoreg = 0;
+                memwrite = 0;
+                alusrcimm = 0;
+                writesreg = 1;
+                indirectbr = 0;
+                jump = 0;
+                pause = 0;
+                itype = `UTYPE;
+                aluop = alu_nop;
+                genupimm = 1;
+                pcrel = 1;
             end
             default: $display("ERROR : unknown opcode");  //???
         endcase

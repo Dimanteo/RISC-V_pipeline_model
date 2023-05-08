@@ -55,17 +55,22 @@ int main(int argc, char **argv) {
 
   size_t imem_i = 0;
   #define PUTIN(inst) put_insn(imem_i++, inst)
+  /// LUI and AUIPC
+  PUTIN(0x0ffff0b7); // lui x1, 0xFFFF
+  PUTIN(0x0ffff117); // auipc x2, 0xFFFF
+  PUTIN(pause_instr);
+
   /// Conditional branches testsbench
   /// BGE
-  PUTIN(0x00000193);  // addi x3, x0, 0
-  PUTIN(0x00500093);  // addi x1, x0, 5
-  PUTIN(0x00600113);  // addi x2, x0, 6
-  PUTIN(0x0020da63);  // bge x1, x2, .Finish
-  PUTIN(0x00100193);  // addi x3, x0, 1
-  PUTIN(0x00500113);  // addi x2, x0, 5
-  PUTIN(0x0020d463);  // bge x1, x2, .Finish
-  PUTIN(0x00200193);  // addi x3, x0, 2
-  PUTIN(pause_instr); // .Finish
+  // PUTIN(0x00000193);  // addi x3, x0, 0
+  // PUTIN(0x00500093);  // addi x1, x0, 5
+  // PUTIN(0x00600113);  // addi x2, x0, 6
+  // PUTIN(0x0020da63);  // bge x1, x2, .Finish
+  // PUTIN(0x00100193);  // addi x3, x0, 1
+  // PUTIN(0x00500113);  // addi x2, x0, 5
+  // PUTIN(0x0020d463);  // bge x1, x2, .Finish
+  // PUTIN(0x00200193);  // addi x3, x0, 2
+  // PUTIN(pause_instr); // .Finish
 
   /// BLT
   // PUTIN(0x00000193);  // addi x3, x0, 0

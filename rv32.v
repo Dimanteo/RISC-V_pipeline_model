@@ -5,7 +5,7 @@ module rv32(input clk, reset,
             output [31:0] aluout, writedata,
             input [31:0] readdata);
     wire memtoreg, branch, alusrc, regdst, regwrite,
-         indirectbr, jump, invcond, uncond;
+         indirectbr, jump, invcond, uncond, genupimm, pcrel;
     wire [3:0] alucontrol;
     wire [2:0] itype;
     wire [31:0] simm, uimm;
@@ -22,7 +22,9 @@ module rv32(input clk, reset,
                 .aluop(alucontrol), 
                 .itype(itype),
                 .invcond(invcond),
-                .uncond(uncond));
+                .uncond(uncond),
+                .genupimm(genupimm),
+                .pcrel(pcrel));
     immdec immd(.instr(instr), .itype(itype), .simm(simm), .uimm(uimm));
     datapath dp(.clk(clk), .reset(reset), 
                 .memtoreg(memtoreg),
@@ -32,6 +34,8 @@ module rv32(input clk, reset,
                 .jump(jump),
                 .invcond(invcond),
                 .uncond(uncond),
+                .genupimm(genupimm),
+                .pcrel(pcrel),
                 .simm(simm),
                 .uimm(uimm),
                 .alucontrol(alucontrol),

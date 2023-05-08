@@ -1,5 +1,5 @@
-module datapath(input clk, reset, memtoreg, alusrcimm,
-                        writesreg, indirectbr, jump, invcond, uncond,
+module datapath(input clk, reset, memtoreg, alusrcimm, writesreg, indirectbr,
+                        jump, invcond, uncond, genupimm, pcrel,
                 input [31:0] simm, uimm,
                 input [3:0] alucontrol,
                 output [31:0] pc /*verilator public*/,
@@ -10,7 +10,7 @@ module datapath(input clk, reset, memtoreg, alusrcimm,
     wire [4:0] rs1 = instr[19:15];
     wire [4:0] rs2 = instr[24:20];
     wire [2:0] funct3 = instr[14:12];
-    wire [31:0] pcnext, pcnextbr, pcplus4, indirectTarget, jumpTarget;
+    wire [31:0] pcnext, pcplus4, indirectTarget, jumpTarget;
     wire [31:0] srca, srcb;
     wire [31:0] result;
     wire brtaken;
@@ -25,7 +25,9 @@ module datapath(input clk, reset, memtoreg, alusrcimm,
 
     // register file logic
     regfile rf(clk, writesreg, rs1, rs2, rd, result, srca, writedata);
-    mux2 #(32) resmux(jump ? pcplus4 : aluout, readdata, memtoreg, result);
+    assign result = memtoreg ? readdata
+        : genupimm ?  (pcrel ? uimm + pc : uimm)
+        : jump ? pcplus4 : aluout;
 
     // ALU logic
     mux2 #(32) srcbmux(writedata, simm, alusrcimm, srcb);

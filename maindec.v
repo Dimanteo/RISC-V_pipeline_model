@@ -25,6 +25,17 @@ module maindec(input [6:0] op, input [2:0] funct3, input [6:0] funct7,
         invcond = 1'bx;
         uncond = 1'bx;
         case(op)
+            `ECALL_OP: begin // EBREAK
+                memtoreg = 0;
+                memwrite = 0;
+                alusrcimm = 0;
+                writesreg = 0;
+                indirectbr = 0;
+                jump = 0;
+                pause = 1;
+                itype = `RTYPE;
+                aluop = alu_nop;
+            end
             `PAUSE_OP: begin
                 memtoreg = 0;
                 memwrite = 0;

@@ -4,7 +4,7 @@
 
 module memory # (parameter SIZE = 1024)
             (input clk, we,
-            input [31:0] address /*verilator public*/,
+            input [31:0] address,
             input usignext,
             input [1:0] width,
             input [31:0] w_data,
@@ -12,14 +12,14 @@ module memory # (parameter SIZE = 1024)
     reg [7:0] storage[SIZE] /*verilator public*/;
     wire [31:0] r_word;
     
-    wire [31:0] read_word = {storage[address],
-                      storage[address + 1],
+    wire [31:0] read_word = {storage[address + 3],
                       storage[address + 2],
-                      storage[address + 3]};
-    wire [31:0] read_half = usignext ? {16'd0, storage[address], storage[address + 1]}
+                      storage[address + 1],
+                      storage[address]};
+    wire [31:0] read_half = usignext ? {16'd0, storage[address + 1], storage[address]}
                         : {{16{storage[address][7]}},
-                          storage[address],
-                          storage[address + 1]};
+                          storage[address + 1],
+                          storage[address]};
     wire [31:0] read_byte = usignext ? {24'd0, storage[address]} : 
                                 {{24{storage[address][7]}}, storage[address]};
 
@@ -34,12 +34,12 @@ module memory # (parameter SIZE = 1024)
                 `BYTE_W:
                     storage[address] <= w_data[7:0];
                 `HALF_W:
-                    {storage[address], storage[address + 1]} <=w_data[15:0];
+                    {storage[address + 1], storage[address]} <=w_data[15:0];
                 `WORD_W:
-                    {storage[address],
-                     storage[address + 1],
+                    {storage[address + 3],
                      storage[address + 2],
-                     storage[address + 3]} <= w_data;
+                     storage[address + 1],
+                     storage[address]} <= w_data;
                 default:;
             endcase
         end

@@ -18,7 +18,7 @@ module datapath(input clk, reset, memtoreg, alusrcimm, writesreg, indirectbr,
     // next PC logic
     flopr #(32) pcreg(clk, reset, pcnext, pc);
     adder pcadd1 (pc, 32'b100, pcplus4);
-    assign indirectTarget = (pc + aluout) & 32'hfffe;
+    assign indirectTarget = aluout & 32'hfffffffe;
     assign jumpTarget = indirectbr ? indirectTarget : (pc + simm);
     mux2 #(32) jumpmux(pcplus4, jumpTarget, jump & (uncond || brtaken), pcnext);
     assign brtaken = invcond ? !(aluout == 0) : aluout == 0;

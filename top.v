@@ -8,7 +8,7 @@ module top(input clk, reset,
     rv32 rv32 (.clk(clk), .reset(reset), .pc(pc), 
                .instr(instr), .writesmem(writesmem), .pause(pause), 
                .aluout(dataadr), .writedata(writedata), .readdata(readdata));
-    memory imem (.clk(clk), .we(0), .address(pc), 
+    memory #(1 << 22) imem (.clk(clk), .we(0), .address(pc), 
                  .usignext(0), .width(`WORD_WIDTH),
                  .w_data(0), .r_data(instr));
     memory dmem (.clk(clk), .we(writesmem), .address(dataadr), 

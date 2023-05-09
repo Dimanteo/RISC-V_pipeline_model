@@ -1,4 +1,4 @@
-obj_dir
-asm
+build
 .vscode
-*.vcd
+*.o
+*.out

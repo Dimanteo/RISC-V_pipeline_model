@@ -81,7 +81,6 @@ int main(int argc, char **argv) {
     model->eval();
     model->clk = !model->clk;
     vcd->dump(++vtime);
-    if (vtime == 20) break;
   }
   vcd->dump(++vtime);
   dump_state();
@@ -113,7 +112,6 @@ size_t loadELF(const std::string &filepath, Vtop_memory__S400000 &memory) {
       continue;
     }
     uint32_t address = segment->get_virtual_address();
-    std::cout << "load address : " << address << "\n";
     size_t filesz = static_cast<size_t>(segment->get_file_size());
     size_t memsz = static_cast<size_t>(segment->get_memory_size());
     //

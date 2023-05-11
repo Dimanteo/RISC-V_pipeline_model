@@ -34,7 +34,7 @@ module memory # (parameter SIZE = 1024)
                 `BYTE_W:
                     storage[address] <= w_data[7:0];
                 `HALF_W:
-                    {storage[address + 1], storage[address]} <=w_data[15:0];
+                    {storage[address + 1], storage[address]} <= w_data[15:0];
                 `WORD_W:
                     {storage[address + 3],
                      storage[address + 2],

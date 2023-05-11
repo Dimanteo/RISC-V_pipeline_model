@@ -1,4 +1,4 @@
-all: genuimm.out alu.out mem.out jal.out jalr.out beq.out bne.out blt.out bge.out fib.out recursive.out
+all: genuimm.out alu.out mem.out jal.out jalr.out beq.out bne.out blt.out bge.out fib.out recursive.out hazard.out
 
 %.out : %.s
 	riscv32-unknown-elf-as $< -o $<.o

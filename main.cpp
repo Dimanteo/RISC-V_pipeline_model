@@ -71,19 +71,17 @@ int main(int argc, char **argv) {
   while (!contextp->gotFinish()) {
     model->eval();
     vcd->dump(vtime++);
-    if (vtime % 8 ==0) {
-      model->clk = !model->clk;
-      if (model->clk)
-        dump_state(++clockn);
-      std::cout << "\n";
-    }
-    if (vtime == 400) {
-      std::cout << "Timeout\n";
-      break;
-    }
+    model->clk = !model->clk;
+    if (model->clk)
+      dump_state(++clockn);
+    std::cout << "\n";
   }
   vcd->dump(vtime++);
   dump_state(++clockn);
+  std::cout << "Mem dump:\n";
+  for (uint8_t i = 0; i < 10; i++) {
+    std::cout << (int)dmem_stor[i] << " ";
+  }
   std::cout << "\n";
   std::cout << "Finished\n";
 

@@ -1,5 +1,7 @@
 #include "Vtop.h"
 #include "Vtop_datapath.h"
+#include "Vtop_pipereg.h"
+#include "Vtop_PCreg.h"
 #include "Vtop_maindec.h"
 #include "Vtop_memory.h"
 #include "Vtop_memory__S400000.h"
@@ -20,7 +22,7 @@ size_t loadELF(const std::string &filepath, Vtop_memory__S400000 &memory);
 int main(int argc, char **argv) {
   auto contextp = std::make_unique<VerilatedContext>();
   contextp->debug(0);
-  contextp->randReset(2);
+  // contextp->randReset(2);
   contextp->traceEverOn(true);
   contextp->commandArgs(argc, argv);
 
@@ -28,7 +30,7 @@ int main(int argc, char **argv) {
   auto &regs = model->top->rv32->dp->rf->regs;
   auto &imem_stor = model->top->imem->storage;
   auto &dmem_stor = model->top->dmem->storage;
-  auto &pc = model->top->rv32->dp->pc;
+  auto &pc = model->top->rv32->dp->pcreg->pc;
 
   Verilated::traceEverOn(true);
   auto vcd = std::make_unique<VerilatedVcdC>();
@@ -37,7 +39,6 @@ int main(int argc, char **argv) {
 
   // Init state
   model->clk = 0;
-  model->reset = 0;
   for (uint32_t r = 0; r < 32; r++) {
     regs[r] = 0;
   }
@@ -52,7 +53,8 @@ int main(int argc, char **argv) {
   }
   pc = loadELF(argv[1], *model->top->imem);
 
-  auto dump_state = [&]() {
+  auto dump_state = [&](size_t clockn) {
+    std::cout << "Clock : " << clockn << "\n";
     std::cout << "PC : " << std::hex << pc << "\n";
     std::cout << "Instr: " << model->top->instr << "\n";
     for (uint32_t r = 0; r < 4; r++) {
@@ -62,28 +64,29 @@ int main(int argc, char **argv) {
       }
       std::cout << "\n";
     }
-    // std::cout << "memdump:\n";
-    // for (unsigned i = 0; i < 4; i++) {
-    //   std::cout << "[" << i << "] : " <<  (int)dmem_stor[i] << " ";
-    // }
     std::cout << "\n";
   };
 
   // Work
   size_t vtime = 0;
+  size_t clockn = 0;
   std::cout << "Evaluate model\n";
-  model->top->rv32->md->pause = 0;
-  while (!contextp->gotFinish() && !model->top->rv32->md->pause) {
-    if (model->clk) {
-      dump_state();
-    }
-    std::cout << "\n";
+  while (!contextp->gotFinish()) {
     model->eval();
-    model->clk = !model->clk;
-    vcd->dump(++vtime);
+    vcd->dump(vtime++);
+    if (vtime % 8 ==0) {
+      model->clk = !model->clk;
+      if (model->clk)
+        dump_state(++clockn);
+      std::cout << "\n";
+    }
+    if (vtime == 400) {
+      std::cout << "Timeout\n";
+      break;
+    }
   }
-  vcd->dump(++vtime);
-  dump_state();
+  vcd->dump(vtime++);
+  dump_state(++clockn);
   std::cout << "\n";
   std::cout << "Finished\n";
 

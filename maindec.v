@@ -1,5 +1,3 @@
-`define PAUSE_OP 7'b0001111
-
 `include "inst.v"
 
 `include "formats.v"
@@ -16,7 +14,7 @@ module maindec(input [6:0] op, input [2:0] funct3, input [6:0] funct7,
                output logic writesreg,
                output logic indirectbr,
                output logic jump,
-               output logic pause /*verilator public*/,
+               output logic pause,
                output logic [3:0] aluop,
                output logic [2:0] itype,
                output logic invcond, uncond,
@@ -40,7 +38,7 @@ module maindec(input [6:0] op, input [2:0] funct3, input [6:0] funct7,
                 itype = `RTYPE;
                 aluop = alu_nop;
             end
-            `PAUSE_OP: begin
+            `FENCE_OP: begin
                 pause = 1;
                 itype = `RTYPE;
                 aluop = alu_nop;
@@ -107,7 +105,7 @@ module maindec(input [6:0] op, input [2:0] funct3, input [6:0] funct7,
                 itype = `UTYPE;
                 aluop = alu_nop;
             end
-            default: $display("ERROR : unknown opcode");  //???
+            default: $display("ERROR : unknown opcode %x", op);  //???
         endcase
     end
 endmodule

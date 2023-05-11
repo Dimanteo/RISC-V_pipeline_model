@@ -4,7 +4,7 @@ module regfile(input clk,
                input [31:0] WD3,
                output [31:0] RD1, RD2);
     reg [31:0] regs[31:0] /*verilator public*/;
-    always @(posedge clk)
+    always @(negedge clk)
     begin
         if (WE3) regs[A3] <= WD3;
     end

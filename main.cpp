@@ -1,8 +1,6 @@
 #include "Vtop.h"
 #include "Vtop_datapath.h"
-#include "Vtop_pipereg.h"
 #include "Vtop_PCreg.h"
-#include "Vtop_maindec.h"
 #include "Vtop_memory.h"
 #include "Vtop_memory__S400000.h"
 #include "Vtop_regfile.h"
@@ -22,7 +20,6 @@ size_t loadELF(const std::string &filepath, Vtop_memory__S400000 &memory);
 int main(int argc, char **argv) {
   auto contextp = std::make_unique<VerilatedContext>();
   contextp->debug(0);
-  // contextp->randReset(2);
   contextp->traceEverOn(true);
   contextp->commandArgs(argc, argv);
 

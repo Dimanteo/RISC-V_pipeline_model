@@ -9,7 +9,15 @@ module datapath(input clk, reset, memtoreg, alusrcimm, writesreg, writesmem,
                 output [31:0] decodeI,
                 output [31:0] aluout, writedata,
                 input [31:0] readdata);
-    wire [31:0] result;
+
+    // Hazard unit
+    wire [1:0] forwardAE, forwardBE;
+
+    HazardUnit hu(
+        // forwarding
+        .rs1E(rs1E), .rs2E(rs2E), .rdM(rdM), .rdW(rdW),
+        .writesregM(writesregM), .writesregW(writesregW),
+        .forwardAE(forwardAE), .forwardBE(forwardBE));
 
     // Fetch
     wire [31:0] instrF, pcnextF, pcplus4F, simmF, uimmF;
@@ -37,19 +45,23 @@ module datapath(input clk, reset, memtoreg, alusrcimm, writesreg, writesmem,
 
     regfile rf(clk, writesregW, rs1D, rs2D, rdW, result, srcaD, writedataD);
 
-    pipereg #(185) DecodePipe(.clk(clk), .reset(reset), .en(!pauseE),
-        .in ({pcD, srcaD, writedataD, rs2D, rdD, simmD, uimmD, alucontrol, memtoreg, alusrcimm, writesreg, writesmem, indirectbr, jump, invcond, uncond, genupimm, pcrel, pauseD}),
-        .out({pcE, srcaE, writedataE, rs2E, rdE, simmE, uimmE, alucontrolE, memtoregE, alusrcimmE, writesregE, writesmemE, indirectbrE, jumpE, invcondE, uncondE, genupimmE, pcrelE, pauseE}));
+    pipereg #(190) DecodePipe(.clk(clk), .reset(reset), .en(!pauseE),
+        .in ({pcD, srcaD, writedataD, rs1D, rs2D, rdD, simmD, uimmD, alucontrol, memtoreg, alusrcimm, writesreg, writesmem, indirectbr, jump, invcond, uncond, genupimm, pcrel, pauseD}),
+        .out({pcE, srcaE, writedataE, rs1E, rs2E, rdE, simmE, uimmE, alucontrolE, memtoregE, alusrcimmE, writesregE, writesmemE, indirectbrE, jumpE, invcondE, uncondE, genupimmE, pcrelE, pauseE}));
 
     // Execute
     wire [31:0] pcE, srcaE, writedataE, simmE, uimmE, srcbE, aluoutE;
-    wire [31:0] indirectTargetE, jumpTargetE;
-    wire [4:0] rs2E, rdE;
+    wire [31:0] indirectTargetE, jumpTargetE, srcaHazard, srcbHazard;
+    wire [4:0] rs1E, rs2E, rdE;
     wire[3:0] alucontrolE;
     wire memtoregE, alusrcimmE, writesregE, writesmemE, indirectbrE, jumpE, invcondE, uncondE, genupimmE, pcrelE, brtakenE, pauseE;
 
     mux2 #(32) srcbmux(writedataE, simmE, alusrcimmE, srcbE);
-    alu alu(srcaE, srcbE, alucontrolE, aluoutE);
+
+    ForwardMux forwardAmux(.srcE(srcaE), .srcM(aluoutM), .srcW(result), .forward(forwardAE), .out(srcaHazard));
+    ForwardMux forwardBmux(.srcE(srcbE), .srcM(aluoutM), .srcW(result), .forward(forwardBE), .out(srcbHazard));
+    
+    alu alu(srcaHazard, srcbHazard, alucontrolE, aluoutE);
 
     assign indirectTargetE = aluoutE & 32'hfffffffe;
     assign jumpTargetE = indirectbrE ? indirectTargetE : (pcE + simmE);
@@ -75,6 +87,7 @@ module datapath(input clk, reset, memtoreg, alusrcimm, writesreg, writesmem,
         .out({pcW, rdW, aluoutW, readdataW, uimmW, writesregW, brtakenW, memtoregW, genupimmW, pcrelW, jumpW, pauseW}));
 
     // Writeback
+    wire [31:0] result;
     wire writesregW, brtakenW, memtoregW, genupimmW, pcrelW, jumpW, pauseW;
     wire [4:0] rdW;
     wire [31:0] pcW, aluoutW, readdataW, uimmW;

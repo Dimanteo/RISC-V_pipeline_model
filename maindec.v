@@ -1,11 +1,6 @@
 `include "inst.v"
 
-`include "formats.v"
-
-`define ALU_ADD  4'b0000
-`define ALU_SUB  4'b1000
-`define ALU_SLT  4'b0010
-`define ALU_SLTU 4'b1010 
+`include "consts.v"
 
 module maindec(input [6:0] op, input [2:0] funct3, input [6:0] funct7,
                output logic memtoreg,

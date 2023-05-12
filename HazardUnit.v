@@ -24,5 +24,5 @@ module HazardUnit(
     assign loadstall = memtoregE && ((rdE == rs1D) || (rdE == rs2D));
     assign stallF = loadstall;
     assign stallD = loadstall;
-    assign flushE = loadstall | speculativeE | speculativeM || speculativeW;
+    assign flushE = loadstall | speculativeE | speculativeM | speculativeW;
 endmodule

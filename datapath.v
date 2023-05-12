@@ -33,13 +33,13 @@ module datapath(input clk, reset, memtoreg, alusrcimm, writesreg, writesmem,
     wire [31:0] instrF, pcnextF, pcplus4F, simmF, uimmF;
     assign instrF = instr;
 
-    wire PCregEN = !stallF & !pauseD;
+    wire PCregEN = !stallF;
 
     PCreg pcreg(.clk(clk), .reset(reset), .en(PCregEN), .in(pcnextF), .out(pc));
     adder pcadd1 (pc, 32'b100, pcplus4F);
 
 
-    wire FetchPipeEN = !stallD & !pauseD;
+    wire FetchPipeEN = !stallD;
 
     pipereg #(64) FetchPipe(.clk(clk), .reset(reset), .en(FetchPipeEN),
                             .in ({instrF, pc}), 

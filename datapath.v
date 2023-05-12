@@ -62,7 +62,7 @@ module datapath(input clk, reset, memtoreg, alusrcimm, writesreg, writesmem,
         .out({pcE, srcaE, writedataE, rs1E, rs2E, rdE, simmE, uimmE, alucontrolE, memtoregE, alusrcimmE, writesregE, writesmemE, indirectbrE, jumpE, invcondE, uncondE, genupimmE, pcrelE, pauseE, funct3E}));
 
     // Execute
-    wire [31:0] pcE, srcaE, writedataE, simmE, uimmE, srcbE, aluoutE;
+    wire [31:0] pcE, srcaE, writedataE, simmE, uimmE, srcbE, aluRes, aluoutE;
     wire [31:0] indirectTargetE, jumpTargetE, srcaHazard, srcbHazard;
     wire [4:0] rs1E, rs2E, rdE;
     wire[3:0] alucontrolE;
@@ -74,7 +74,9 @@ module datapath(input clk, reset, memtoreg, alusrcimm, writesreg, writesmem,
     
     mux2 #(32) srcbmux(srcbHazard, simmE, alusrcimmE, srcbE);
 
-    alu alu(srcaHazard, srcbE, alucontrolE, aluoutE);
+    alu alu(srcaHazard, srcbE, alucontrolE, aluRes);
+
+    assign aluoutE = genupimmE ? (pcrelE ? uimmE + pcE : uimmE) : aluRes;
 
     assign indirectTargetE = aluoutE & 32'hfffffffe;
     assign jumpTargetE = indirectbrE ? indirectTargetE : (pcE + simmE);
@@ -107,9 +109,7 @@ module datapath(input clk, reset, memtoreg, alusrcimm, writesreg, writesmem,
     wire writesregW, brtakenW, memtoregW, genupimmW, pcrelW, jumpW, pauseW;
     wire [4:0] rdW;
     wire [31:0] pcW, aluoutW, readdataW, uimmW;
-    assign result = memtoregW ? readdataW
-        : genupimmW ?  (pcrelW ? uimmW + pcW : uimmW)
-        : jumpW ? pcW + 4 : aluoutW;
+    assign result = memtoregW ? readdataW : jumpW ? pcW + 4 : aluoutW;
 
     always @(negedge clk) begin
         if (pauseW) $finish;

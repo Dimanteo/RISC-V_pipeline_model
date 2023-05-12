@@ -8,7 +8,9 @@ module HazardUnit(
     // RAW stalling
     input [4:0] rdE, rs1D, rs2D,
     input memtoregE,
-    output stallF, stallD, flushE);
+    output stallF, stallD, flushE,
+    // Control hazards
+    input speculativeE, speculativeM, speculativeW);
 
     // Forwarding logic
     assign forwardAE = (rs1E != 0) && (rs1E == rdM) && writesregM ? `FWD_MEM
@@ -22,5 +24,5 @@ module HazardUnit(
     assign loadstall = memtoregE && ((rdE == rs1D) || (rdE == rs2D));
     assign stallF = loadstall;
     assign stallD = loadstall;
-    assign flushE = loadstall;
+    assign flushE = loadstall | speculativeE | speculativeM || speculativeW;
 endmodule

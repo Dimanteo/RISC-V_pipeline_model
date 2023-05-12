@@ -23,7 +23,11 @@ module datapath(input clk, reset, memtoreg, alusrcimm, writesreg, writesmem,
         // stalling
         .rdE(rdE), .rs1D(rs1D), .rs2D(rs2D),
         .memtoregE(memtoregE),
-        .stallF(stallF), .stallD(stallD), .flushE(flushE));
+        .stallF(stallF), .stallD(stallD), .flushE(flushE),
+        // control hazards
+        .speculativeE(jumpE),
+        .speculativeM(jumpM),
+        .speculativeW(jumpW));
 
     // Fetch
     wire [31:0] instrF, pcnextF, pcplus4F, simmF, uimmF;
@@ -67,7 +71,8 @@ module datapath(input clk, reset, memtoreg, alusrcimm, writesreg, writesmem,
     wire [4:0] rs1E, rs2E, rdE;
     wire[3:0] alucontrolE;
     wire [2:0] funct3E;
-    wire memtoregE, alusrcimmE, writesregE, writesmemE, indirectbrE, jumpE, invcondE, uncondE, genupimmE, pcrelE, brtakenE, pauseE;
+    wire memtoregE, alusrcimmE, writesregE, writesmemE, indirectbrE, jumpE,
+        invcondE, uncondE, genupimmE, pcrelE, brtakenE, pauseE, speculativeE;
 
     ForwardMux forwardAmux(.srcE(srcaE), .srcM(aluoutM), .srcW(result), .forward(forwardAE), .out(srcaHazard));
     ForwardMux forwardBmux(.srcE(writedataE), .srcM(aluoutM), .srcW(result), .forward(forwardBE), .out(srcbHazard));

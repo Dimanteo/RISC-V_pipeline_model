@@ -4,7 +4,7 @@ _start:
     j Tgt
     addi x2, x0, 1
     addi x2, x2, 1
-    addi x2, x0, 1
+    addi x2, x2, 1
     addi x2, x2, 1
 Tgt:
     ecall

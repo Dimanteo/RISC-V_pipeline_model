@@ -25,9 +25,9 @@ module datapath(input clk, reset, memtoreg, alusrcimm, writesreg, writesmem,
         .memtoregE(memtoregE),
         .stallF(stallF), .stallD(stallD), .flushE(flushE),
         // control hazards
-        .speculativeE(jumpE),
-        .speculativeM(jumpM),
-        .speculativeW(jumpW));
+        .speculativeE(jumpE & brtakenE),
+        .speculativeM(jumpM & brtakenM),
+        .speculativeW(jumpW & brtakenW));
 
     // Fetch
     wire [31:0] instrF, pcnextF, pcplus4F, simmF, uimmF;
@@ -85,7 +85,9 @@ module datapath(input clk, reset, memtoreg, alusrcimm, writesreg, writesmem,
 
     assign indirectTargetE = aluoutE & 32'hfffffffe;
     assign jumpTargetE = indirectbrE ? indirectTargetE : (pcE + simmE);
-    assign brtakenE = invcondE ? !(aluoutE == 0) : aluoutE == 0;
+    wire zero;
+    assign zero = invcondE ? !(aluoutE == 0) : aluoutE == 0;
+    assign brtakenE = (zero | uncondE) & jumpE;
 
     pipereg #(209) ExecutePipe(.clk(clk), .reset(reset), .en(!pauseM),
         .in ({pcE, rdE, aluoutE, jumpTargetE, writedataE, simmE, uimmE, writesregE, brtakenE, uncondE, memtoregE, genupimmE, pcrelE, jumpE, writesmemE, pauseE, funct3E}),
@@ -103,7 +105,7 @@ module datapath(input clk, reset, memtoreg, alusrcimm, writesreg, writesmem,
     assign aluout = aluoutM;
     assign memcontrol = funct3M;
 
-    mux2 #(32) jumpmux(pcplus4F, jumpTargetM, jumpM & (uncondM || brtakenM), pcnextF);
+    mux2 #(32) jumpmux(pcplus4F, jumpTargetM, brtakenM, pcnextF);
 
     pipereg #(140) MemoryPipe(.clk(clk), .reset(reset), .en(!pauseW),
         .in ({pcM, rdM, aluoutM, readdataM, uimmM, writesregM, brtakenM, memtoregM, genupimmM, pcrelM, jumpM, pauseM}),

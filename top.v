@@ -2,13 +2,13 @@
 
 module top(input clk, reset,
            output [31:0] dataadr,
-           output memWE);
+           output memWE, validOut);
     wire [31:0] pc, instr /*verilator public*/, readdata, writedata;
     wire [2:0] memcontrol;
     // instantiate processor and memories
     rv32 rv32 (.clk(clk), .reset(reset), .pc(pc),
                .fetchI(instr), .memWE(memWE),
-               .memcontrol(memcontrol),
+               .memcontrol(memcontrol), .validOut(validOut),
                .aluout(dataadr), .writedata(writedata), .readdata(readdata));
     memory #(1 << 22) imem (.clk(clk), .we(0), .address(pc), 
                  .usignext(0), .width(`WORD_WIDTH),

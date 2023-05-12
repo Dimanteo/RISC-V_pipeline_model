@@ -1,7 +1,7 @@
 module datapath(input clk, reset, memtoreg, alusrcimm, writesreg, writesmem, 
                         indirectbr, jump, invcond, uncond, genupimm, pcrel,
-                        pauseD,
-                output memWE,
+                        pauseD, valid,
+                output memWE, validOut,
                 input [31:0] simm, uimm,
                 input [3:0] alucontrol,
                 output [2:0] memcontrol,
@@ -52,7 +52,9 @@ module datapath(input clk, reset, memtoreg, alusrcimm, writesreg, writesmem,
     wire [4:0] rs2D = instrD[24:20];
     wire [2:0] funct3D = instrD[14:12];
     wire [31:0] srcaD, writedataD, simmD, uimmD;
+    wire validD;
 
+    assign validD = valid;
     assign decodeI = instrD;
     assign simmD = simm;
     assign uimmD = uimm;
@@ -61,9 +63,9 @@ module datapath(input clk, reset, memtoreg, alusrcimm, writesreg, writesmem,
 
     wire DecodePipeReset = flushE;
 
-    pipereg #(193) DecodePipe(.clk(clk), .reset(DecodePipeReset), .en(!pauseE),
-        .in ({pcD, srcaD, writedataD, rs1D, rs2D, rdD, simmD, uimmD, alucontrol, memtoreg, alusrcimm, writesreg, writesmem, indirectbr, jump, invcond, uncond, genupimm, pcrel, pauseD, funct3D}),
-        .out({pcE, srcaE, writedataE, rs1E, rs2E, rdE, simmE, uimmE, alucontrolE, memtoregE, alusrcimmE, writesregE, writesmemE, indirectbrE, jumpE, invcondE, uncondE, genupimmE, pcrelE, pauseE, funct3E}));
+    pipereg #(194) DecodePipe(.clk(clk), .reset(DecodePipeReset), .en(!pauseE),
+        .in ({pcD, srcaD, writedataD, rs1D, rs2D, rdD, simmD, uimmD, alucontrol, memtoreg, alusrcimm, writesreg, writesmem, indirectbr, jump, invcond, uncond, genupimm, pcrel, pauseD, funct3D, validD}),
+        .out({pcE, srcaE, writedataE, rs1E, rs2E, rdE, simmE, uimmE, alucontrolE, memtoregE, alusrcimmE, writesregE, writesmemE, indirectbrE, jumpE, invcondE, uncondE, genupimmE, pcrelE, pauseE, funct3E, validE}));
 
     // Execute
     wire [31:0] pcE, srcaE, writedataE, simmE, uimmE, srcbE, aluRes, aluoutE;
@@ -72,7 +74,7 @@ module datapath(input clk, reset, memtoreg, alusrcimm, writesreg, writesmem,
     wire[3:0] alucontrolE;
     wire [2:0] funct3E;
     wire memtoregE, alusrcimmE, writesregE, writesmemE, indirectbrE, jumpE,
-        invcondE, uncondE, genupimmE, pcrelE, brtakenE, pauseE, speculativeE;
+        invcondE, uncondE, genupimmE, pcrelE, brtakenE, pauseE, validE;
 
     ForwardMux forwardAmux(.srcE(srcaE), .srcM(aluoutM), .srcW(result), .forward(forwardAE), .out(srcaHazard));
     ForwardMux forwardBmux(.srcE(writedataE), .srcM(aluoutM), .srcW(result), .forward(forwardBE), .out(srcbHazard));
@@ -89,15 +91,16 @@ module datapath(input clk, reset, memtoreg, alusrcimm, writesreg, writesmem,
     assign zero = invcondE ? !(aluoutE == 0) : aluoutE == 0;
     assign brtakenE = (zero | uncondE) & jumpE;
 
-    pipereg #(209) ExecutePipe(.clk(clk), .reset(reset), .en(!pauseM),
-        .in ({pcE, rdE, aluoutE, jumpTargetE, writedataE, simmE, uimmE, writesregE, brtakenE, uncondE, memtoregE, genupimmE, pcrelE, jumpE, writesmemE, pauseE, funct3E}),
-        .out({pcM, rdM, aluoutM, jumpTargetM, writedataM, simmM, uimmM, writesregM, brtakenM, uncondM, memtoregM, genupimmM, pcrelM, jumpM, writesmemM, pauseM, funct3M}));
+    pipereg #(220) ExecutePipe(.clk(clk), .reset(reset), .en(!pauseM),
+        .in ({pcE, rs1E, rs2E, rdE, aluoutE, jumpTargetE, writedataE, simmE, uimmE, writesregE, brtakenE, uncondE, memtoregE, genupimmE, pcrelE, jumpE, writesmemE, pauseE, funct3E, validE}),
+        .out({pcM, rs1M, rs2M, rdM, aluoutM, jumpTargetM, writedataM, simmM, uimmM, writesregM, brtakenM, uncondM, memtoregM, genupimmM, pcrelM, jumpM, writesmemM, pauseM, funct3M, validM}));
 
     // Memory
     wire [31:0] readdataM, pcM, jumpTargetM, aluoutM, writedataM, simmM, uimmM;
-    wire [4:0] rdM;
+    wire [4:0] rs1M, rs2M, rdM;
     wire [2:0] funct3M;
-    wire writesregM, brtakenM, uncondM, memtoregM, genupimmM, pcrelM, jumpM, writesmemM, pauseM;
+    wire writesregM, brtakenM, uncondM, memtoregM, genupimmM, pcrelM, jumpM, 
+        writesmemM, pauseM, validM;
     
     assign readdataM = readdata;
     assign writedata = writedataM;
@@ -107,16 +110,17 @@ module datapath(input clk, reset, memtoreg, alusrcimm, writesreg, writesmem,
 
     mux2 #(32) jumpmux(pcplus4F, jumpTargetM, brtakenM, pcnextF);
 
-    pipereg #(140) MemoryPipe(.clk(clk), .reset(reset), .en(!pauseW),
-        .in ({pcM, rdM, aluoutM, readdataM, uimmM, writesregM, brtakenM, memtoregM, genupimmM, pcrelM, jumpM, pauseM}),
-        .out({pcW, rdW, aluoutW, readdataW, uimmW, writesregW, brtakenW, memtoregW, genupimmW, pcrelW, jumpW, pauseW}));
+    pipereg #(151) MemoryPipe(.clk(clk), .reset(reset), .en(!pauseW),
+        .in ({pcM, rs1M, rs2M, rdM, aluoutM, readdataM, simmM, writesregM, brtakenM, memtoregM, genupimmM, pcrelM, jumpM, pauseM, validM}),
+        .out({pcW, rs1W, rs2W, rdW, aluoutW, readdataW, simmW, writesregW, brtakenW, memtoregW, genupimmW, pcrelW, jumpW, pauseW, validW}));
 
     // Writeback
     wire [31:0] result;
-    wire writesregW, brtakenW, memtoregW, genupimmW, pcrelW, jumpW, pauseW;
-    wire [4:0] rdW;
-    wire [31:0] pcW, aluoutW, readdataW, uimmW;
+    wire writesregW, brtakenW, memtoregW, genupimmW, pcrelW, jumpW, pauseW, validW;
+    wire [4:0] rs1W /*verilator public*/, rs2W /*verilator public*/, rdW /*verilator public*/;
+    wire [31:0] pcW /*verilator public*/, aluoutW, readdataW, simmW /*verilator public*/;
     assign result = memtoregW ? readdataW : jumpW ? pcW + 4 : aluoutW;
+    assign validOut = validW;
 
     always @(negedge clk) begin
         if (pauseW) $finish;

@@ -13,9 +13,44 @@
 
 #include <memory>
 #include <iostream>
+#include <iomanip>
 #include <string>
 
 size_t loadELF(const std::string &filepath, Vtop_memory__S400000 &memory);
+
+std::string RegfileStr(const Vtop &model) {
+  std::stringstream ss{};
+  ss << std::setfill('0');
+  constexpr std::size_t lineNum = 8;
+  auto &regs = model.top->rv32->dp->rf->regs;
+
+  for (std::size_t i = 0; i < lineNum; ++i) {
+    for (std::size_t j = 0; j < 32 / lineNum; ++j) {
+      auto regIdx = j * lineNum + i;
+      auto &reg = regs[regIdx];
+      ss << "  [" << std::dec << std::setw(2) << regIdx << "] ";
+      ss << "0x" << std::hex << std::setw(sizeof(reg) * 2) << reg;
+    }
+    ss << std::endl;
+  }
+
+  return ss.str();
+}
+
+void writeTrace(const Vtop *model) {
+  auto &datapath = model->top->rv32->dp;
+  std::cout
+      << "*********************************************************"
+          "**********************"
+      << std::endl;
+  std::cout << std::hex << "0x" << (unsigned)datapath->pcW << ": "
+            << "CMD" << std::dec << " rd = " << (int)datapath->rdW
+            << ", rs1 = " << (int)datapath->rs1W
+            << ", rs2 = " << (int)datapath->rs2W << std::hex
+            << ", imm = 0x" << datapath->simmW << std::dec
+            << std::endl;
+  std::cout << RegfileStr(*model);
+}
 
 int main(int argc, char **argv) {
   auto contextp = std::make_unique<VerilatedContext>();
@@ -72,16 +107,17 @@ int main(int argc, char **argv) {
     model->eval();
     vcd->dump(vtime++);
     model->clk = !model->clk;
-    if (model->clk)
-      dump_state(++clockn);
-    std::cout << "\n";
+    if (!model->clk && model->validOut) {
+      // dump_state(++clockn);
+      writeTrace(model.get());
+    }
   }
   vcd->dump(vtime++);
-  dump_state(++clockn);
-  std::cout << "Mem dump:\n";
-  for (uint8_t i = 0; i < 10; i++) {
-    std::cout << (int)dmem_stor[i] << " ";
-  }
+  // dump_state(++clockn);
+  // std::cout << "Mem dump:\n";
+  // for (uint8_t i = 0; i < 10; i++) {
+  //   std::cout << (int)dmem_stor[i] << " ";
+  // }
   std::cout << "\n";
   std::cout << "Finished\n";
 

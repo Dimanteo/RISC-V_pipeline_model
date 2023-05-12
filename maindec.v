@@ -100,6 +100,7 @@ module maindec(input [6:0] op, input [2:0] funct3, input [6:0] funct7,
                 itype = `UTYPE;
                 aluop = alu_nop;
             end
+            7'b0000000:; // zero opcode from reset, perform no operation
             default: $display("ERROR : unknown opcode %x", op);  //???
         endcase
     end
